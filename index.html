@@ -34,17 +34,6 @@
             color: var(--text-main);
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
-            overscroll-behavior-y: contain;
-        }
-
-        #ptr-indicator {
-            text-align: center;
-            font-size: 0.8em;
-            color: var(--text-secondary);
-            height: 0px;
-            overflow: hidden;
-            transition: height 0.2s ease;
-            font-weight: 600;
         }
 
         header {
@@ -75,12 +64,14 @@
             background: rgba(0, 102, 255, 0.1);
             border: 1px solid rgba(0, 102, 255, 0.25);
             color: var(--accent-blue);
-            padding: 6px 10px;
+            padding: 6px 12px;
             border-radius: 8px;
-            font-size: 0.75em;
+            font-size: 0.78em;
             font-weight: 700;
             cursor: pointer;
+            transition: all 0.2s;
         }
+        .sync-btn:active { background: rgba(0, 102, 255, 0.25); }
 
         .subtitle {
             font-size: 0.8em;
@@ -420,8 +411,6 @@
 </head>
 <body>
 
-    <div id="ptr-indicator">🔄 Pull down to sync latest updates...</div>
-
     <header>
         <div class="header-top-row">
             <div style="width: 60px;"></div>
@@ -496,7 +485,7 @@
         function getWeekSequence(weekNum) {
             let startAnchor = localStorage.getItem(`w${weekNum}-start-anchor`);
             if (!startAnchor) {
-                startAnchor = "Wednesday"; // Default unstarted view starting on Wednesday
+                startAnchor = "Wednesday";
             }
             const startIndex = standardOrder.indexOf(startAnchor);
             let sequence = [];
@@ -506,20 +495,33 @@
             return sequence;
         }
 
-        let currentView = 'workout';
-        let currentWeek = 1;
-        let activeDayIndex = 0;
+        let currentView = localStorage.getItem('app_current_view') || 'workout';
+        let currentWeek = parseInt(localStorage.getItem('app_current_week')) || 1;
+        let activeDayIndex = parseInt(localStorage.getItem('app_active_day_index')) || 0;
 
         function initApp() {
             renderWeekSlider();
             renderDayTabs();
             renderContent();
             updateProgressBars();
-            setupPullToRefresh();
+
+            // Restore Context & Scroll Position
+            const savedScroll = localStorage.getItem('app_scroll_y');
+            if (savedScroll) {
+                setTimeout(() => {
+                    window.scrollTo({ top: parseInt(savedScroll), behavior: 'instant' });
+                }, 50);
+            }
+
+            // Continuously save scroll position
+            window.addEventListener('scroll', () => {
+                localStorage.setItem('app_scroll_y', window.scrollY);
+            }, { passive: true });
         }
 
         function switchView(view) {
             currentView = view;
+            localStorage.setItem('app_current_view', view);
             document.getElementById('btn-workout').classList.toggle('active', view === 'workout');
             document.getElementById('btn-diet').classList.toggle('active', view === 'diet');
             renderContent();
@@ -535,6 +537,8 @@
                 chip.onclick = () => {
                     currentWeek = i;
                     activeDayIndex = 0;
+                    localStorage.setItem('app_current_week', currentWeek);
+                    localStorage.setItem('app_active_day_index', 0);
                     updatePhaseHeader();
                     renderWeekSlider();
                     renderDayTabs();
@@ -570,6 +574,7 @@
                 tab.innerText = label;
                 tab.onclick = () => {
                     activeDayIndex = idx;
+                    localStorage.setItem('app_active_day_index', idx);
                     renderDayTabs();
                     renderContent();
                 };
@@ -662,8 +667,6 @@
 
         function handleCheck(actualDayName, type, dayIdx, itemIdx, checked) {
             if (checked && !localStorage.getItem(`w${currentWeek}-start-anchor`)) {
-                // Determine which standard weekday this day belongs to, then find what start anchor makes this day line up correctly.
-                // Since sequence starts at anchor, if user checks on dayIdx, anchor is standardOrder[(standardOrder.indexOf(actualDayName) - dayIdx + 7) % 7]
                 const actualDayIdx = standardOrder.indexOf(actualDayName);
                 const computedAnchor = standardOrder[(actualDayIdx - dayIdx + 7) % 7];
                 localStorage.setItem(`w${currentWeek}-start-anchor`, computedAnchor);
@@ -756,6 +759,7 @@
                     }
                 });
                 activeDayIndex = 0;
+                localStorage.setItem('app_active_day_index', 0);
                 renderDayTabs();
                 renderContent();
                 updateProgressBars();
@@ -763,42 +767,8 @@
         }
 
         function forceSync() {
+            localStorage.setItem('app_scroll_y', window.scrollY);
             window.location.reload(true);
-        }
-
-        function setupPullToRefresh() {
-            let startY = 0;
-            const ptrIndicator = document.getElementById('ptr-indicator');
-
-            window.addEventListener('touchstart', e => {
-                if (window.scrollY === 0) {
-                    startY = e.touches[0].pageY;
-                }
-            }, { passive: true });
-
-            window.addEventListener('touchmove', e => {
-                if (window.scrollY === 0 && startY > 0) {
-                    let currentY = e.touches[0].pageY;
-                    let diff = currentY - startY;
-                    if (diff > 0 && diff < 120) {
-                        ptrIndicator.style.height = `${diff * 0.4}px`;
-                    }
-                }
-            }, { passive: true });
-
-            window.addEventListener('touchend', e => {
-                if (window.scrollY === 0 && startY > 0) {
-                    let diff = e.changedTouches[0].pageY - startY;
-                    if (diff > 60) {
-                        ptrIndicator.style.height = "35px";
-                        ptrIndicator.innerText = "🔄 Updating changes...";
-                        setTimeout(() => { window.location.reload(true); }, 500);
-                    } else {
-                        ptrIndicator.style.height = "0px";
-                    }
-                }
-                startY = 0;
-            }, { passive: true });
         }
 
         function showToast() {
