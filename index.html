@@ -7,24 +7,28 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         :root {
-            --bg-base: #0b0e14;
-            --bg-card: rgba(22, 28, 38, 0.7);
-            --bg-card-solid: #161c26;
-            --accent-blue: #007aff;
-            --accent-purple: #af52de;
-            --accent-green: #34c759;
-            --accent-orange: #ff9500;
-            --text-main: #f5f5f7;
-            --text-secondary: #86868b;
-            --border-color: rgba(255, 255, 255, 0.08);
+            /* Acrylic Light Theme Color Palette */
+            --bg-base: #f4f6fb;
+            --bg-gradient: linear-gradient(135deg, #eef2f9 0%, #f7f9fc 50%, #e8eef8 100%);
+            --bg-card: rgba(255, 255, 255, 0.75);
+            --bg-card-solid: #ffffff;
+            --accent-blue: #0066ff;
+            --accent-purple: #8e44ad;
+            --accent-green: #2ecc71;
+            --accent-orange: #e67e22;
+            --text-main: #1c2536;
+            --text-secondary: #64748b;
+            --border-color: rgba(203, 213, 225, 0.6);
+            --shadow-subtle: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+            --shadow-card: 0 8px 25px rgba(148, 163, 184, 0.15);
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 15px;
-            background-color: var(--bg-base);
-            background-image: radial-gradient(circle at 50% 0%, #1a233a 0%, var(--bg-base) 75%);
+            padding: 16px;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
             color: var(--text-main);
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
@@ -36,47 +40,51 @@
         }
 
         h1 {
-            font-size: 1.4em;
-            font-weight: 700;
-            margin: 0 0 5px 0;
-            background: linear-gradient(135deg, #fff 30%, #a1a1aa 100%);
+            font-size: 1.5em;
+            font-weight: 800;
+            margin: 0 0 4px 0;
+            background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
         }
 
         .subtitle {
-            font-size: 0.8em;
+            font-size: 0.82em;
             color: var(--text-secondary);
+            font-weight: 500;
             margin-bottom: 12px;
         }
 
         /* Top View Segment Control */
         .view-switcher {
             display: flex;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 3px;
-            margin-bottom: 15px;
+            background: rgba(226, 232, 240, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 14px;
+            padding: 4px;
+            margin-bottom: 16px;
             border: 1px solid var(--border-color);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
         .view-btn {
             flex: 1;
-            padding: 10px;
+            padding: 11px;
             border: none;
             background: transparent;
             color: var(--text-secondary);
             font-weight: 600;
-            font-size: 0.9em;
-            border-radius: 9px;
+            font-size: 0.88em;
+            border-radius: 10px;
             cursor: pointer;
-            transition: all 0.25s ease;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .view-btn.active {
-            background: var(--accent-blue);
-            color: #fff;
-            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+            background: var(--bg-card-solid);
+            color: var(--accent-blue);
+            box-shadow: 0 4px 14px rgba(0, 102, 255, 0.15);
         }
 
         /* Week Selector Container */
@@ -84,9 +92,10 @@
             background: var(--bg-card);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 12px;
-            margin-bottom: 15px;
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-subtle);
         }
 
         .week-header {
@@ -94,14 +103,14 @@
             justify-content: space-between;
             align-items: center;
             font-size: 0.85em;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--text-secondary);
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-main);
         }
 
         .week-slider-wrapper {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             overflow-x: auto;
             padding-bottom: 4px;
             scrollbar-width: none;
@@ -109,54 +118,56 @@
         .week-slider-wrapper::-webkit-scrollbar { display: none; }
 
         .week-chip {
-            padding: 6px 12px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            font-size: 0.8em;
-            font-weight: 600;
-            white-space: nowrap;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .week-chip.active {
-            background: var(--accent-purple);
-            color: white;
-            border-color: transparent;
-            box-shadow: 0 2px 8px rgba(175, 82, 222, 0.3);
-        }
-
-        /* Day Navigation Tabs */
-        .day-tabs {
-            display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            margin-bottom: 15px;
-            padding-bottom: 4px;
-            scrollbar-width: none;
-        }
-        .day-tabs::-webkit-scrollbar { display: none; }
-
-        .day-tab {
-            padding: 8px 14px;
+            padding: 7px 14px;
             border-radius: 10px;
-            background: var(--bg-card);
+            background: rgba(241, 245, 249, 0.8);
             border: 1px solid var(--border-color);
             color: var(--text-secondary);
-            font-size: 0.85em;
+            font-size: 0.82em;
             font-weight: 600;
             white-space: nowrap;
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
+        .week-chip.active {
+            background: linear-gradient(135deg, #8e44ad, #a855f7);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(142, 68, 173, 0.25);
+        }
+
+        /* Day Navigation Tabs */
+        .day-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+        .day-tabs::-webkit-scrollbar { display: none; }
+
+        .day-tab {
+            padding: 9px 16px;
+            border-radius: 12px;
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+
         .day-tab.active {
-            background: #fff;
-            color: #000;
-            border-color: #fff;
-            box-shadow: 0 2px 10px rgba(255,255,255,0.2);
+            background: var(--accent-blue);
+            color: #ffffff;
+            border-color: var(--accent-blue);
+            box-shadow: 0 4px 14px rgba(0, 102, 255, 0.3);
         }
 
         /* Progress Card */
@@ -164,54 +175,58 @@
             background: var(--bg-card);
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 12px 15px;
-            margin-bottom: 15px;
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-subtle);
         }
 
         .progress-info {
             display: flex;
             justify-content: space-between;
-            font-size: 0.8em;
-            font-weight: 600;
+            font-size: 0.82em;
+            font-weight: 700;
             margin-bottom: 6px;
+            color: var(--text-main);
         }
 
         .progress-bar-bg {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 6px;
-            height: 8px;
+            background: rgba(226, 232, 240, 0.8);
+            border-radius: 8px;
+            height: 9px;
             width: 100%;
             overflow: hidden;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .progress-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            background: linear-gradient(90deg, var(--accent-blue), #22c55e);
             width: 0%;
+            border-radius: 8px;
             transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .overall-progress-fill {
-            background: linear-gradient(90deg, var(--accent-purple), var(--accent-orange));
+            background: linear-gradient(90deg, #8e44ad, var(--accent-orange));
         }
 
         .progress-subtext {
-            font-size: 0.75em;
+            font-size: 0.78em;
             color: var(--text-secondary);
             text-align: right;
+            font-weight: 500;
         }
 
         /* Main Content Card */
         .content-card {
             background: var(--bg-card);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 16px;
+            border-radius: 20px;
+            padding: 18px;
             margin-bottom: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--shadow-card);
             animation: fadeIn 0.3s ease;
         }
 
@@ -221,9 +236,9 @@
         }
 
         .card-header-title {
-            font-size: 1.1em;
-            font-weight: 700;
-            color: #fff;
+            font-size: 1.15em;
+            font-weight: 800;
+            color: var(--text-main);
             margin-bottom: 4px;
             display: flex;
             align-items: center;
@@ -231,9 +246,10 @@
         }
 
         .card-header-desc {
-            font-size: 0.85em;
+            font-size: 0.84em;
             color: var(--text-secondary);
-            margin-bottom: 14px;
+            margin-bottom: 16px;
+            line-height: 1.4;
         }
 
         /* Tables & Lists */
@@ -243,15 +259,15 @@
         }
 
         th, td {
-            padding: 10px 6px;
+            padding: 11px 8px;
             text-align: left;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.85em;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            font-size: 0.86em;
         }
 
         th {
             color: var(--text-secondary);
-            font-weight: 600;
+            font-weight: 700;
             font-size: 0.75em;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -262,25 +278,26 @@
             width: 44px;
         }
 
-        /* Custom Animated Checkbox */
+        /* Custom Animated Checkbox (Light Mode Optimized) */
         input[type="checkbox"] {
             appearance: none;
             -webkit-appearance: none;
             width: 22px;
             height: 22px;
-            border: 2px solid var(--text-secondary);
-            border-radius: 6px;
-            background: transparent;
+            border: 2px solid #cbd5e1;
+            border-radius: 7px;
+            background: #ffffff;
             cursor: pointer;
             position: relative;
             transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
         input[type="checkbox"]:checked {
             background: var(--accent-green);
             border-color: var(--accent-green);
             transform: scale(1.1);
-            box-shadow: 0 0 10px rgba(52, 199, 89, 0.4);
+            box-shadow: 0 3px 10px rgba(46, 204, 113, 0.35);
         }
 
         input[type="checkbox"]:checked::after {
@@ -291,14 +308,14 @@
             width: 5px;
             height: 10px;
             border: solid white;
-            border-width: 0 2px 2px 0;
+            border-width: 0 2.5px 2.5px 0;
             transform: rotate(45deg);
         }
 
         tr.completed-row td {
-            color: var(--text-secondary);
+            color: #94a3b8;
             text-decoration: line-through;
-            opacity: 0.6;
+            opacity: 0.75;
         }
 
         /* Diet Meal Item */
@@ -306,54 +323,56 @@
             display: flex;
             align-items: flex-start;
             gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-color);
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         }
         .meal-item:last-child { border-bottom: none; }
 
         .meal-time {
             font-size: 0.75em;
-            font-weight: 700;
+            font-weight: 800;
             color: var(--accent-orange);
             text-transform: uppercase;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
+            letter-spacing: 0.4px;
         }
 
         .meal-name {
-            font-size: 0.9em;
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 2px;
+            font-size: 0.92em;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 3px;
         }
 
         .meal-desc {
-            font-size: 0.8em;
+            font-size: 0.82em;
             color: var(--text-secondary);
+            line-height: 1.35;
         }
 
         .meal-macros {
-            font-size: 0.75em;
-            color: var(--accent-green);
-            margin-top: 4px;
-            font-weight: 500;
+            font-size: 0.76em;
+            color: #16a34a;
+            margin-top: 5px;
+            font-weight: 600;
         }
 
         /* Reset Button */
         .reset-btn {
             display: block;
             width: 100%;
-            padding: 12px;
-            background: rgba(255, 59, 48, 0.15);
-            color: #ff453a;
-            border: 1px solid rgba(255, 59, 48, 0.3);
-            border-radius: 12px;
-            font-size: 0.9em;
-            font-weight: 600;
+            padding: 13px;
+            background: rgba(239, 68, 68, 0.08);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 14px;
+            font-size: 0.88em;
+            font-weight: 700;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 12px;
             transition: all 0.2s;
         }
-        .reset-btn:active { background: rgba(255, 59, 48, 0.3); }
+        .reset-btn:active { background: rgba(239, 68, 68, 0.18); }
 
         /* Toast notification */
         #toast {
@@ -361,15 +380,14 @@
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%) translateY(100px);
-            background: rgba(28, 28, 30, 0.9);
+            background: rgba(15, 23, 42, 0.9);
             backdrop-filter: blur(20px);
             color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
+            padding: 11px 22px;
+            border-radius: 25px;
             font-size: 0.85em;
             font-weight: 600;
-            border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             z-index: 1000;
             pointer-events: none;
@@ -381,7 +399,7 @@
 
     <header>
         <h1>Full-Body Fitness & Diet</h1>
-        <div class="subtitle">Morning Schedule (8:00 AM – 10:00 AM) • ~75 kg Maintenance</div>
+        <div class="subtitle" id="main-subtitle">Morning Schedule (8:00 AM – 10:00 AM) • ~75 kg Maintenance</div>
     </header>
 
     <!-- Top View Switcher -->
@@ -418,7 +436,7 @@
         <div class="progress-bar-bg">
             <div class="progress-bar-fill overall-progress-fill" id="overall-fill"></div>
         </div>
-        <div class="progress-subtext" id="streak-text">Keep going! Consistency builds muscle.</div>
+        <div class="progress-subtext" id="streak-text">Let's Get Started! Check your first box to begin.</div>
     </div>
 
     <!-- Main Dynamic Content Container -->
@@ -436,13 +454,7 @@
         let currentWeek = 1;
         let currentDayIndex = 0;
 
-        // 12-Week Workout Engine with Equipment & Morning Warmup
         const workoutData = {
-            focus: [
-                "Foundation & Movement Prep", "Foundation & Movement Prep", "Foundation & Movement Prep", "Foundation & Movement Prep",
-                "Progressive Overload & Density", "Progressive Overload & Density", "Progressive Overload & Density", "Progressive Overload & Density",
-                "Peak Power & Stamina", "Peak Power & Stamina", "Peak Power & Stamina", "Peak Power & Stamina"
-            ],
             schedules: {
                 Monday: {
                     title: "Upper Body Strength & Joint Prep",
@@ -519,7 +531,6 @@
             }
         };
 
-        // Budget-Friendly Veg + Non-Veg Diet Plan Tailored for 8-10 AM Morning Workout
         const dietData = {
             Monday: [
                 { time: "7:15 AM (Pre-Workout)", name: "Quick Digestible Carb & Electrolyte", desc: "1 Large Banana + 1 tbsp Peanut Butter + Warm Salted Water or Black Coffee", macros: "Calories: ~220 kcal | Protein: 5g" },
@@ -573,6 +584,7 @@
 
         function initApp() {
             renderWeekSlider();
+            determineActiveDayDynamic();
             renderDayTabs();
             renderContent();
             updateProgressBars();
@@ -583,6 +595,43 @@
             document.getElementById('btn-workout').classList.toggle('active', view === 'workout');
             document.getElementById('btn-diet').classList.toggle('active', view === 'diet');
             renderContent();
+        }
+
+        function determineActiveDayDynamic() {
+            let firstCheckedDay = -1;
+            let hasAnyCheckedInWeek = false;
+
+            for (let d = 0; d < days.length; d++) {
+                let dayHasCheck = false;
+                const exCount = workoutData.schedules[days[d]].exercises.length;
+                for (let e = 0; e < exCount; e++) {
+                    if (localStorage.getItem(`w${currentWeek}-d${d}-ex${e}`) === 'true') {
+                        dayHasCheck = true;
+                        break;
+                    }
+                }
+                if (!dayHasCheck) {
+                    const mealCount = dietData[days[d]].length;
+                    for (let m = 0; m < mealCount; m++) {
+                        if (localStorage.getItem(`w${currentWeek}-diet-${d}-${m}`) === 'true') {
+                            dayHasCheck = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (dayHasCheck) {
+                    hasAnyCheckedInWeek = true;
+                    firstCheckedDay = d;
+                    break;
+                }
+            }
+
+            if (hasAnyCheckedInWeek && firstCheckedDay !== -1) {
+                currentDayIndex = firstCheckedDay;
+            } else {
+                currentDayIndex = 0;
+            }
         }
 
         function renderWeekSlider() {
@@ -596,6 +645,8 @@
                     currentWeek = i;
                     updatePhaseHeader();
                     renderWeekSlider();
+                    determineActiveDayDynamic();
+                    renderDayTabs();
                     renderContent();
                     updateProgressBars();
                 };
@@ -633,9 +684,25 @@
             const container = document.getElementById('main-content');
             const dayName = days[currentDayIndex];
 
+            let weekStarted = false;
+            for (let d = 0; d < days.length; d++) {
+                const exCount = workoutData.schedules[days[d]].exercises.length;
+                for (let e = 0; e < exCount; e++) {
+                    if (localStorage.getItem(`w${currentWeek}-d${d}-ex${e}`) === 'true') weekStarted = true;
+                }
+                const mealCount = dietData[days[d]].length;
+                for (let m = 0; m < mealCount; m++) {
+                    if (localStorage.getItem(`w${currentWeek}-diet-${d}-${m}`) === 'true') weekStarted = true;
+                }
+            }
+
             if (currentView === 'workout') {
                 const dayPlan = workoutData.schedules[dayName];
+                let headerBanner = !weekStarted ? 
+                    `<div style="background: rgba(0, 102, 255, 0.08); border: 1px solid rgba(0, 102, 255, 0.2); padding: 11px 15px; border-radius: 12px; margin-bottom: 14px; font-size: 0.85em; color: #0052cc;">🚀 <strong>Let's Get Started!</strong> Check your first exercise below to officially begin Week ${currentWeek}.</div>` : '';
+
                 let html = `
+                    ${headerBanner}
                     <div class="card-header-title">🏋️ ${dayName}: ${dayPlan.title}</div>
                     <div class="card-header-desc">🔥 <strong>Morning Warmup:</strong> ${dayPlan.warmup}</div>
                     <table>
@@ -656,12 +723,12 @@
                     html += `
                         <tr class="${isChecked ? 'completed-row' : ''}" id="row-${key}">
                             <td>
-                                <strong style="color:#fff; font-size:0.95em;">${ex.name}</strong><br>
-                                <span style="font-size:0.75em; color:var(--accent-blue);">⚙️ ${ex.eq}</span><br>
-                                <span style="font-size:0.75em; color:var(--text-secondary);">Rest: ${ex.rest}</span>
+                                <strong style="color:var(--text-main); font-size:0.95em;">${ex.name}</strong><br>
+                                <span style="font-size:0.77em; color:var(--accent-blue); font-weight:600;">⚙️ ${ex.eq}</span><br>
+                                <span style="font-size:0.77em; color:var(--text-secondary);">Rest: ${ex.rest}</span>
                             </td>
-                            <td>${ex.sets}</td>
-                            <td>${ex.reps}</td>
+                            <td><strong>${ex.sets}</strong></td>
+                            <td><strong>${ex.reps}</strong></td>
                             <td class="checkbox-cell">
                                 <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCheck('${key}', this.checked)">
                             </td>
@@ -672,7 +739,11 @@
                 container.innerHTML = html;
             } else {
                 const meals = dietData[dayName];
+                let headerBanner = !weekStarted ? 
+                    `<div style="background: rgba(230, 126, 34, 0.08); border: 1px solid rgba(230, 126, 34, 0.25); padding: 11px 15px; border-radius: 12px; margin-bottom: 14px; font-size: 0.85em; color: #d35400;">🚀 <strong>Let's Get Started!</strong> Check your first meal below to officially begin Week ${currentWeek}.</div>` : '';
+
                 let html = `
+                    ${headerBanner}
                     <div class="card-header-title">🥗 ${dayName} Diet Plan (~160g Protein)</div>
                     <div class="card-header-desc">Optimized around 8:00 AM – 10:00 AM workout timing. Budget-friendly natural veg & non-veg options.</div>
                     <div style="display:flex; flex-direction:column; gap:12px;">
@@ -682,13 +753,13 @@
                     const key = `w${currentWeek}-diet-${currentDayIndex}-${mealIdx}`;
                     const isChecked = localStorage.getItem(key) === 'true';
                     html += `
-                        <div class="meal-item" id="meal-row-${key}" style="opacity: ${isChecked ? 0.5 : 1};">
+                        <div class="meal-item" id="meal-row-${key}" style="opacity: ${isChecked ? 0.55 : 1};">
                             <div style="padding-top:2px;">
                                 <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCheck('${key}', this.checked)">
                             </div>
                             <div style="flex:1;">
                                 <div class="meal-time">${meal.time}</div>
-                                <div class="meal-name" style="${isChecked ? 'text-decoration: line-through;' : ''}">${meal.name}</div>
+                                <div class="meal-name" style="${isChecked ? 'text-decoration: line-through; color: #94a3b8;' : ''}">${meal.name}</div>
                                 <div class="meal-desc">${meal.desc}</div>
                                 <div class="meal-macros">${meal.macros}</div>
                             </div>
@@ -704,7 +775,6 @@
         function toggleCheck(key, checked) {
             localStorage.setItem(key, checked);
             
-            // UI row update
             const row = document.getElementById(`row-${key}`) || document.getElementById(`meal-row-${key}`);
             if (row) {
                 if (checked) {
@@ -718,32 +788,43 @@
                 }
             }
             updateProgressBars();
+            renderContent();
         }
 
         function updateProgressBars() {
-            // Active week progress
             let totalItems = 0;
             let checkedItems = 0;
+            let weekStarted = false;
 
             days.forEach((_, dIdx) => {
-                // Workout exercises count
                 const dayKey = days[dIdx];
                 const exCount = workoutData.schedules[dayKey].exercises.length;
                 for (let e = 0; e < exCount; e++) {
                     totalItems++;
-                    if (localStorage.getItem(`w${currentWeek}-d${dIdx}-ex${e}`) === 'true') checkedItems++;
+                    if (localStorage.getItem(`w${currentWeek}-d${dIdx}-ex${e}`) === 'true') {
+                        checkedItems++;
+                        weekStarted = true;
+                    }
                 }
-                // Diet meals count
                 const mealCount = dietData[dayKey].length;
                 for (let m = 0; m < mealCount; m++) {
                     totalItems++;
-                    if (localStorage.getItem(`w${currentWeek}-diet-${dIdx}-${m}`) === 'true') checkedItems++;
+                    if (localStorage.getItem(`w${currentWeek}-diet-${dIdx}-${m}`) === 'true') {
+                        checkedItems++;
+                        weekStarted = true;
+                    }
                 }
             });
 
             const percent = totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0;
             document.getElementById('progress-percent').innerText = `${percent}%`;
             document.getElementById('progress-fill').style.width = `${percent}%`;
+
+            if (!weekStarted) {
+                document.getElementById('streak-text').innerText = "Let's Get Started! Check your first box to begin Week " + currentWeek + ".";
+            } else {
+                document.getElementById('streak-text').innerText = `Week ${currentWeek} in progress! Keep going.`;
+            }
 
             // Overall 12 week progress
             let overallTotal = 0;
@@ -779,6 +860,8 @@
                         localStorage.removeItem(`w${currentWeek}-diet-${dIdx}-${m}`);
                     }
                 });
+                currentDayIndex = 0;
+                renderDayTabs();
                 renderContent();
                 updateProgressBars();
             }
