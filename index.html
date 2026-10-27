@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progressive Workout & Diet Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg-base: #0b0e14;
+            --bg-card: rgba(22, 28, 38, 0.7);
+            --bg-card-solid: #161c26;
+            --accent-blue: #007aff;
+            --accent-purple: #af52de;
+            --accent-green: #34c759;
+            --accent-orange: #ff9500;
+            --text-main: #f5f5f7;
+            --text-secondary: #86868b;
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: var(--bg-base);
+            background-image: radial-gradient(circle at 50% 0%, #1a233a 0%, var(--bg-base) 75%);
+            color: var(--text-main);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 1.4em;
+            font-weight: 700;
+            margin: 0 0 5px 0;
+            background: linear-gradient(135deg, #fff 30%, #a1a1aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        /* Top View Segment Control */
+        .view-switcher {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 3px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .view-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9em;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .view-btn.active {
+            background: var(--accent-blue);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        /* Week Selector Container */
+        .week-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .week-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .week-slider-wrapper {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+        .week-slider-wrapper::-webkit-scrollbar { display: none; }
+
+        .week-chip {
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.8em;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .week-chip.active {
+            background: var(--accent-purple);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 2px 8px rgba(175, 82, 222, 0.3);
+        }
+
+        /* Day Navigation Tabs */
+        .day-tabs {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+        .day-tabs::-webkit-scrollbar { display: none; }
+
+        .day-tab {
+            padding: 8px 14px;
+            border-radius: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .day-tab.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+            box-shadow: 0 2px 10px rgba(255,255,255,0.2);
+        }
+
+        /* Progress Card */
+        .progress-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .progress-bar-bg {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            height: 8px;
+            width: 100%;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .overall-progress-fill {
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-orange));
+        }
+
+        .progress-subtext {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            text-align: right;
+        }
+
+        /* Main Content Card */
+        .content-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-header-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-header-desc {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-bottom: 14px;
+        }
+
+        /* Tables & Lists */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px 6px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85em;
+        }
+
+        th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.75em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .checkbox-cell {
+            text-align: center;
+            width: 44px;
+        }
+
+        /* Custom Animated Checkbox */
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--text-secondary);
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        input[type="checkbox"]:checked {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(52, 199, 89, 0.4);
+        }
+
+        input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        tr.completed-row td {
+            color: var(--text-secondary);
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        /* Diet Meal Item */
+        .meal-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .meal-item:last-child { border-bottom: none; }
+
+        .meal-time {
+            font-size: 0.75em;
+            font-weight: 700;
+            color: var(--accent-orange);
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .meal-name {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .meal-desc {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+        }
+
+        .meal-macros {
+            font-size: 0.75em;
+            color: var(--accent-green);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* Reset Button */
+        .reset-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 59, 48, 0.15);
+            color: #ff453a;
+            border: 1px solid rgba(255, 59, 48, 0.3);
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+        .reset-btn:active { background: rgba(255, 59, 48, 0.3); }
+
+        /* Toast notification */
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(28, 28, 30, 0.9);
+            backdrop-filter: blur(20px);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 1000;
+            pointer-events: none;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Full-Body Fitness & Diet</h1>
+        <div class="subtitle">Morning Schedule (8:00 AM – 10:00 AM) • ~75 kg Maintenance</div>
+    </header>
+
+    <!-- Top View Switcher -->
+    <div class="view-switcher">
+        <button class="view-btn active" id="btn-workout" onclick="switchView('workout')">🏋️ Workout Plan</button>
+        <button class="view-btn" id="btn-diet" onclick="switchView('diet')">🥗 Diet Plan (~160g Protein)</button>
+    </div>
+
+    <!-- Week Selector -->
+    <div class="week-container">
+        <div class="week-header">
+            <span id="phase-title">Phase 1: Foundation & Mobility (Weeks 1-4)</span>
+            <span id="week-label">Week 1</span>
+        </div>
+        <div class="week-slider-wrapper" id="week-slider"></div>
+    </div>
+
+    <!-- Day Navigation Tabs -->
+    <div class="day-tabs" id="day-tabs"></div>
+
+    <!-- Progress Tracker Card -->
+    <div class="progress-card">
+        <div class="progress-info">
+            <span id="active-week-title">Week 1 Progress</span>
+            <span id="progress-percent">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-info" style="margin-top: 10px;">
+            <span>Overall 12-Week Journey</span>
+            <span id="overall-percent">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill overall-progress-fill" id="overall-fill"></div>
+        </div>
+        <div class="progress-subtext" id="streak-text">Keep going! Consistency builds muscle.</div>
+    </div>
+
+    <!-- Main Dynamic Content Container -->
+    <div class="content-card" id="main-content"></div>
+
+    <!-- Reset Option -->
+    <button class="reset-btn" onclick="resetCurrentWeek()">Reset Current Week Progress</button>
+
+    <div id="toast">🎉 Great job completing this item!</div>
+
+    <script>
+        const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+        
+        let currentView = 'workout';
+        let currentWeek = 1;
+        let currentDayIndex = 0;
+
+        // 12-Week Workout Engine with Equipment & Morning Warmup
+        const workoutData = {
+            focus: [
+                "Foundation & Movement Prep", "Foundation & Movement Prep", "Foundation & Movement Prep", "Foundation & Movement Prep",
+                "Progressive Overload & Density", "Progressive Overload & Density", "Progressive Overload & Density", "Progressive Overload & Density",
+                "Peak Power & Stamina", "Peak Power & Stamina", "Peak Power & Stamina", "Peak Power & Stamina"
+            ],
+            schedules: {
+                Monday: {
+                    title: "Upper Body Strength & Joint Prep",
+                    warmup: "5m Arm Circles, Band Pull-Aparts, Scapular Pull-ups",
+                    exercises: [
+                        { name: "Barbell Bench Press", eq: "Power Rack & Olympic Barbell", sets: 4, reps: "6 - 8", rest: "90s" },
+                        { name: "Supported Dumbbell Rows", eq: "Incline Bench & Dumbbells", sets: 4, reps: "8 - 10", rest: "75s" },
+                        { name: "Seated Overhead Press", eq: "Dumbbells & Utility Bench", sets: 3, reps: "8 - 10", rest: "75s" },
+                        { name: "Lat Pulldown", eq: "Cable Pulldown Machine", sets: 3, reps: "10 - 12", rest: "60s" },
+                        { name: "Weighted Plank", eq: "Bodyweight & Weight Plate", sets: 3, reps: "45 sec", rest: "45s" }
+                    ]
+                },
+                Tuesday: {
+                    title: "Lower Body Power & Stamina",
+                    warmup: "5m Leg Swings, Bodyweight Squats, Hip Mobility",
+                    exercises: [
+                        { name: "Barbell Back Squat", eq: "Power Rack & Barbell", sets: 4, reps: "6 - 8", rest: "120s" },
+                        { name: "Romanian Deadlift (RDL)", eq: "Olympic Barbell", sets: 4, reps: "8 - 10", rest: "90s" },
+                        { name: "Leg Press Machine", eq: "45-Degree Leg Press Machine", sets: 3, reps: "10 - 12", rest: "75s" },
+                        { name: "Standing Calf Raises", eq: "Smith Machine or Calf Block", sets: 3, reps: "15", rest: "60s" },
+                        { name: "Hanging Knee Raises", eq: "Pull-up Bar / Captain's Chair", sets: 3, reps: "12 - 15", rest: "60s" }
+                    ]
+                },
+                Wednesday: {
+                    title: "Push Hypertrophy & Core",
+                    warmup: "5m Band Rotations, Push-ups",
+                    exercises: [
+                        { name: "Incline Dumbbell Press", eq: "Adjustable Bench & Dumbbells", sets: 4, reps: "8 - 10", rest: "75s" },
+                        { name: "Dumbbell Lateral Raises", eq: "Dumbbells", sets: 4, reps: "12 - 15", rest: "60s" },
+                        { name: "Machine Chest Press", eq: "Plate-Loaded Chest Press Machine", sets: 3, reps: "10 - 12", rest: "60s" },
+                        { name: "Tricep Cable Pushdowns", eq: "Cable Stack with Rope", sets: 3, reps: "12 - 15", rest: "60s" },
+                        { name: "Russian Twists", eq: "Mat & Medicine Ball / Plate", sets: 3, reps: "20 reps", rest: "45s" }
+                    ]
+                },
+                Thursday: {
+                    title: "Pull Hypertrophy & Back Density",
+                    warmup: "5m Band Pull-Aparts, Light Lat Stretch",
+                    exercises: [
+                        { name: "Wide-Grip Lat Pulldown", eq: "Cable Lat Pulldown Machine", sets: 4, reps: "8 - 10", rest: "75s" },
+                        { name: "Seated Cable Rows", eq: "Low Cable Row Machine", sets: 4, reps: "8 - 10", rest: "75s" },
+                        { name: "Face Pulls", eq: "Cable Stack with Rope Attachment", sets: 3, reps: "15", rest: "60s" },
+                        { name: "Incline Bicep Curls", eq: "Incline Bench & Dumbbells", sets: 3, reps: "10 - 12", rest: "60s" },
+                        { name: "Dead Bugs", eq: "Exercise Mat", sets: 3, reps: "12 per side", rest: "45s" }
+                    ]
+                },
+                Friday: {
+                    title: "Full-Body Stamina & Conditioning",
+                    warmup: "5m Dynamic Skipping / Jog in Place",
+                    exercises: [
+                        { name: "Kettlebell Swings", eq: "Cast Iron Kettlebell", sets: 4, reps: "15 - 20", rest: "60s" },
+                        { name: "Dumbbell Thrusters", eq: "Pair of Moderate Dumbbells", sets: 4, reps: "10 - 12", rest: "75s" },
+                        { name: "Push-ups to Renegade Row", eq: "Hex Dumbbells & Mat", sets: 3, reps: "10 reps", rest: "75s" },
+                        { name: "Bodyweight Walking Lunges", eq: "Open Space", sets: 3, reps: "20 steps", rest: "60s" },
+                        { name: "Forearm Planks", eq: "Exercise Mat", sets: 3, reps: "60 sec", rest: "45s" }
+                    ]
+                },
+                Saturday: {
+                    title: "Active Recovery & Mobility",
+                    warmup: "Full Body Foam Rolling",
+                    exercises: [
+                        { name: "Light Steady Cardio / Jog", eq: "Treadmill or Outdoor Park", sets: 1, reps: "30 mins", rest: "-" },
+                        { name: "Dynamic Yoga Flow / Stretch", eq: "Yoga Mat", sets: 1, reps: "20 mins", rest: "-" },
+                        { name: "Foam Rolling Quads & Lats", eq: "High-Density Foam Roller", sets: 1, reps: "10 mins", rest: "-" }
+                    ]
+                },
+                Sunday: {
+                    title: "Complete Rest & Muscle Repair",
+                    warmup: "None - Full Physical Rest",
+                    exercises: [
+                        { name: "Complete Rest & Hydration", eq: "None (Recovery Day)", sets: 1, reps: "Full Day", rest: "-" },
+                        { name: "Mobility & Water Intake", eq: "Water Bottle (3.5L Target)", sets: 1, reps: "All Day", rest: "-" }
+                    ]
+                }
+            }
+        };
+
+        // Budget-Friendly Veg + Non-Veg Diet Plan Tailored for 8-10 AM Morning Workout
+        const dietData = {
+            Monday: [
+                { time: "7:15 AM (Pre-Workout)", name: "Quick Digestible Carb & Electrolyte", desc: "1 Large Banana + 1 tbsp Peanut Butter + Warm Salted Water or Black Coffee", macros: "Calories: ~220 kcal | Protein: 5g" },
+                { time: "10:30 AM (Post-Workout)", name: "Anabolic Egg & Oats Bowl", desc: "3 Whole Eggs (Boiled/Scrambled) + 1 cup Oats cooked in Milk + handful of Mixed Seeds", macros: "Calories: ~540 kcal | Protein: 32g" },
+                { time: "1:30 PM (Lunch)", name: "Budget Chicken / Paneer Rice Bowl", desc: "150g Grilled Chicken Breast or 120g Paneer + 1.5 cups Steamed Rice + Dal Tadka + Cucumber Salad", macros: "Calories: ~650 kcal | Protein: 48g" },
+                { time: "5:00 PM (Evening Snack)", name: "Roasted Chana & Sattu Drink", desc: "1 cup Roasted Chana (Bhuna Chana) + 1 glass Sattu drink with lemon and roasted cumin", macros: "Calories: ~280 kcal | Protein: 18g" },
+                { time: "8:30 PM (Dinner)", name: "Light Recovery Meal", desc: "2 Whole Wheat Chapatis + Mixed Vegetable Sabzi + 1 bowl Curd (Dahi)", macros: "Calories: ~480 kcal | Protein: 22g" }
+            ],
+            Tuesday: [
+                { time: "7:15 AM (Pre-Workout)", name: "Energy Boost", desc: "1 Apple + 10 Almonds + Warm Honey Water", macros: "Calories: ~180 kcal | Protein: 3g" },
+                { time: "10:30 AM (Post-Workout)", name: "Paneer / Egg Bhurji Power Meal", desc: "120g Paneer Bhurji with tomatoes/onions + 2 Whole Wheat Toasts + 1 Glass Milk", macros: "Calories: ~560 kcal | Protein: 34g" },
+                { time: "1:30 PM (Lunch)", name: "Lentil & Fish / Soya Meal", desc: "150g Rohu/Tilapia Fish or Soya Chunks Curry + 1.5 cups Rice + Green Salad", macros: "Calories: ~600 kcal | Protein: 45g" },
+                { time: "5:00 PM (Evening Snack)", name: "Peanut Butter Banana Toast", desc: "1 Brown Bread Slice + 1.5 tbsp Peanut Butter + Black Tea/Coffee", macros: "Calories: ~240 kcal | Protein: 9g" },
+                { time: "8:30 PM (Dinner)", name: "Dal & Chapati Recovery", desc: "3 Chapatis + Thick Yellow Dal + Sautéed Green Beans", macros: "Calories: ~500 kcal | Protein: 20g" }
+            ],
+            Wednesday: [
+                { time: "7:15 AM (Pre-Workout)", name: "Pre-Workout Fuel", desc: "1 Banana + Black Coffee", macros: "Calories: ~110 kcal | Protein: 1g" },
+                { time: "10:30 AM (Post-Workout)", name: "Egg White & Whole Egg Omelette", desc: "2 Whole Eggs + 2 Egg Whites Omelette with spinach + 1 cup Cooked Oats", macros: "Calories: ~490 kcal | Protein: 30g" },
+                { time: "1:30 PM (Lunch)", name: "Chicken / Chana Dal & Rice", desc: "150g Chicken Curry + 1.5 cups Rice + Salad with lemon dressing", macros: "Calories: ~630 kcal | Protein: 46g" },
+                { time: "5:00 PM (Evening Snack)", name: "Sprouts Chaat", desc: "1 bowl Boiled Moong Sprouts tossed with onions, tomatoes, and lemon", macros: "Calories: ~200 kcal | Protein: 14g" },
+                { time: "8:30 PM (Dinner)", name: "Light Paneer & Roti Dinner", desc: "2 Chapatis + 100g Pan-seared Tofu or Paneer + Steamed Broccoli/Cabbage", macros: "Calories: ~450 kcal | Protein: 25g" }
+            ],
+            Thursday: [
+                { time: "7:15 AM (Pre-Workout)", name: "Quick Digestion Fuel", desc: "Handful of Raisins + Warm Water", macros: "Calories: ~130 kcal | Protein: 2g" },
+                { time: "10:30 AM (Post-Workout)", name: "Peanut Butter Oat Shake", desc: "1 cup Oats + 1 Banana + 1.5 tbsp Peanut Butter + 1.5 cups Milk blended", macros: "Calories: ~580 kcal | Protein: 26g" },
+                { time: "1:30 PM (Lunch)", name: "Fish / Dal Palak & Rice", desc: "150g Fish Fillet or Dal Palak (Spinach Dal) + 1.5 cups Rice + Curd", macros: "Calories: ~610 kcal | Protein: 42g" },
+                { time: "5:00 PM (Evening Snack)", name: "Boiled Eggs & Roasted Peanuts", desc: "2 Boiled Eggs (whites) + Small handful of roasted peanuts", macros: "Calories: ~210 kcal | Protein: 15g" },
+                { time: "8:30 PM (Dinner)", name: "Vegetable Khichdi & Curd", desc: "1 large bowl Moong Dal & Rice Khichdi with ghee + Raita", macros: "Calories: ~470 kcal | Protein: 18g" },
+            ],
+            Friday: [
+                { time: "7:15 AM (Pre-Workout)", name: "Pre-Workout Carb", desc: "1 Banana + 5 Walnuts", macros: "Calories: ~180 kcal | Protein: 3g" },
+                { time: "10:30 AM (Post-Workout)", name: "High-Protein Scramble", desc: "3 Whole Eggs Scrambled + 2 Wheat Chapatis", macros: "Calories: ~520 kcal | Protein: 28g" },
+                { time: "1:30 PM (Lunch)", name: "Conditioning Day Fuel", desc: "150g Chicken Breast / Paneer + Quinoa or Brown/White Rice + Dal", macros: "Calories: ~640 kcal | Protein: 50g" },
+                { time: "5:00 PM (Evening Snack)", name: "Sattu & Roasted Chana", desc: "1 glass Sweet/Salty Sattu Drink", macros: "Calories: ~160 kcal | Protein: 12g" },
+                { time: "8:30 PM (Dinner)", name: "End of Week Recovery", desc: "2 Chapatis + Mix Veg Sabzi + Boiled Egg / Paneer cubes", macros: "Calories: ~490 kcal | Protein: 24g" }
+            ],
+            Saturday: [
+                { time: "8:00 AM (Pre-Cardio)", name: "Light Morning Fuel", desc: "1 Apple + Warm Water", macros: "Calories: ~90 kcal | Protein: 1g" },
+                { time: "10:30 AM (Post-Cardio)", name: "Recovery Breakfast", desc: "Oats Porridge with Milk, Banana, and Chia Seeds", macros: "Calories: ~450 kcal | Protein: 18g" },
+                { time: "1:30 PM (Lunch)", name: "Balanced Weekend Lunch", desc: "120g Lean Chicken or Paneer + Rice + Raita", macros: "Calories: ~580 kcal | Protein: 38g" },
+                { time: "5:00 PM (Evening Snack)", name: "Makhana (Fox Nuts)", desc: "1 large bowl Roasted Makhana in 1 tsp Ghee", macros: "Calories: ~150 kcal | Protein: 4g" },
+                { time: "8:30 PM (Dinner)", name: "Light Saturday Meal", desc: "2 Chapatis + Dal Fry + Salad", macros: "Calories: ~420 kcal | Protein: 16g" }
+            ],
+            Sunday: [
+                { time: "9:00 AM (Rest Day Breakfast)", name: "Relaxed Sunday Breakfast", desc: "3 Whole Egg Omelette + 2 Toasts + Glass of Milk", macros: "Calories: ~510 kcal | Protein: 28g" },
+                { time: "1:30 PM (Rest Day Lunch)", name: "Family Meal (Balanced)", desc: "Home-cooked Chicken Curry or Paneer Makhani (moderate oil) + Rice + Salad", macros: "Calories: ~650 kcal | Protein: 40g" },
+                { time: "5:00 PM (Evening Snack)", name: "Fruit & Yogurt Bowl", desc: "1 cup Greek Yogurt or Thick Curd + Diced Apple/Banana", macros: "Calories: ~200 kcal | Protein: 12g" },
+                { time: "8:30 PM (Dinner)", name: "Light Sunday Dinner", desc: "2 Chapatis + Green Sabzi + Warm Turmeric Milk", macros: "Calories: ~410 kcal | Protein: 18g" }
+            ]
+        };
+
+        function initApp() {
+            renderWeekSlider();
+            renderDayTabs();
+            renderContent();
+            updateProgressBars();
+        }
+
+        function switchView(view) {
+            currentView = view;
+            document.getElementById('btn-workout').classList.toggle('active', view === 'workout');
+            document.getElementById('btn-diet').classList.toggle('active', view === 'diet');
+            renderContent();
+        }
+
+        function renderWeekSlider() {
+            const slider = document.getElementById('week-slider');
+            slider.innerHTML = '';
+            for (let i = 1; i <= 12; i++) {
+                const chip = document.createElement('div');
+                chip.className = `week-chip ${i === currentWeek ? 'active' : ''}`;
+                chip.innerText = `Wk ${i}`;
+                chip.onclick = () => {
+                    currentWeek = i;
+                    updatePhaseHeader();
+                    renderWeekSlider();
+                    renderContent();
+                    updateProgressBars();
+                };
+                slider.appendChild(chip);
+            }
+            updatePhaseHeader();
+        }
+
+        function updatePhaseHeader() {
+            let phase = "Phase 1: Foundation & Mobility (Wk 1-4)";
+            if (currentWeek > 4 && currentWeek <= 8) phase = "Phase 2: Progressive Overload (Wk 5-8)";
+            if (currentWeek > 8) phase = "Phase 3: Peak Power & Stamina (Wk 9-12)";
+            document.getElementById('phase-title').innerText = phase;
+            document.getElementById('week-label').innerText = `Week ${currentWeek}`;
+            document.getElementById('active-week-title').innerText = `Week ${currentWeek} Progress`;
+        }
+
+        function renderDayTabs() {
+            const tabsContainer = document.getElementById('day-tabs');
+            tabsContainer.innerHTML = '';
+            days.forEach((day, idx) => {
+                const tab = document.createElement('div');
+                tab.className = `day-tab ${idx === currentDayIndex ? 'active' : ''}`;
+                tab.innerText = day;
+                tab.onclick = () => {
+                    currentDayIndex = idx;
+                    renderDayTabs();
+                    renderContent();
+                };
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+        function renderContent() {
+            const container = document.getElementById('main-content');
+            const dayName = days[currentDayIndex];
+
+            if (currentView === 'workout') {
+                const dayPlan = workoutData.schedules[dayName];
+                let html = `
+                    <div class="card-header-title">🏋️ ${dayName}: ${dayPlan.title}</div>
+                    <div class="card-header-desc">🔥 <strong>Morning Warmup:</strong> ${dayPlan.warmup}</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Exercise & Equipment</th>
+                                <th>Sets</th>
+                                <th>Reps</th>
+                                <th class="checkbox-cell">Done</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                dayPlan.exercises.forEach((ex, exIdx) => {
+                    const key = `w${currentWeek}-d${currentDayIndex}-ex${exIdx}`;
+                    const isChecked = localStorage.getItem(key) === 'true';
+                    html += `
+                        <tr class="${isChecked ? 'completed-row' : ''}" id="row-${key}">
+                            <td>
+                                <strong style="color:#fff; font-size:0.95em;">${ex.name}</strong><br>
+                                <span style="font-size:0.75em; color:var(--accent-blue);">⚙️ ${ex.eq}</span><br>
+                                <span style="font-size:0.75em; color:var(--text-secondary);">Rest: ${ex.rest}</span>
+                            </td>
+                            <td>${ex.sets}</td>
+                            <td>${ex.reps}</td>
+                            <td class="checkbox-cell">
+                                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCheck('${key}', this.checked)">
+                            </td>
+                        </tr>
+                    `;
+                });
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            } else {
+                const meals = dietData[dayName];
+                let html = `
+                    <div class="card-header-title">🥗 ${dayName} Diet Plan (~160g Protein)</div>
+                    <div class="card-header-desc">Optimized around 8:00 AM – 10:00 AM workout timing. Budget-friendly natural veg & non-veg options.</div>
+                    <div style="display:flex; flex-direction:column; gap:12px;">
+                `;
+
+                meals.forEach((meal, mealIdx) => {
+                    const key = `w${currentWeek}-diet-${currentDayIndex}-${mealIdx}`;
+                    const isChecked = localStorage.getItem(key) === 'true';
+                    html += `
+                        <div class="meal-item" id="meal-row-${key}" style="opacity: ${isChecked ? 0.5 : 1};">
+                            <div style="padding-top:2px;">
+                                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCheck('${key}', this.checked)">
+                            </div>
+                            <div style="flex:1;">
+                                <div class="meal-time">${meal.time}</div>
+                                <div class="meal-name" style="${isChecked ? 'text-decoration: line-through;' : ''}">${meal.name}</div>
+                                <div class="meal-desc">${meal.desc}</div>
+                                <div class="meal-macros">${meal.macros}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+                container.innerHTML = html;
+            }
+            updateProgressBars();
+        }
+
+        function toggleCheck(key, checked) {
+            localStorage.setItem(key, checked);
+            
+            // UI row update
+            const row = document.getElementById(`row-${key}`) || document.getElementById(`meal-row-${key}`);
+            if (row) {
+                if (checked) {
+                    row.classList.add('completed-row');
+                    showToast();
+                    try {
+                        confetti({ particleCount: 30, spread: 60, origin: { y: 0.8 } });
+                    } catch (e) {}
+                } else {
+                    row.classList.remove('completed-row');
+                }
+            }
+            updateProgressBars();
+        }
+
+        function updateProgressBars() {
+            // Active week progress
+            let totalItems = 0;
+            let checkedItems = 0;
+
+            days.forEach((_, dIdx) => {
+                // Workout exercises count
+                const dayKey = days[dIdx];
+                const exCount = workoutData.schedules[dayKey].exercises.length;
+                for (let e = 0; e < exCount; e++) {
+                    totalItems++;
+                    if (localStorage.getItem(`w${currentWeek}-d${dIdx}-ex${e}`) === 'true') checkedItems++;
+                }
+                // Diet meals count
+                const mealCount = dietData[dayKey].length;
+                for (let m = 0; m < mealCount; m++) {
+                    totalItems++;
+                    if (localStorage.getItem(`w${currentWeek}-diet-${dIdx}-${m}`) === 'true') checkedItems++;
+                }
+            });
+
+            const percent = totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0;
+            document.getElementById('progress-percent').innerText = `${percent}%`;
+            document.getElementById('progress-fill').style.width = `${percent}%`;
+
+            // Overall 12 week progress
+            let overallTotal = 0;
+            let overallChecked = 0;
+            for (let w = 1; w <= 12; w++) {
+                days.forEach((_, dIdx) => {
+                    const exCount = workoutData.schedules[days[dIdx]].exercises.length;
+                    for (let e = 0; e < exCount; e++) {
+                        overallTotal++;
+                        if (localStorage.getItem(`w${w}-d${dIdx}-ex${e}`) === 'true') overallChecked++;
+                    }
+                    const mealCount = dietData[days[dIdx]].length;
+                    for (let m = 0; m < mealCount; m++) {
+                        overallTotal++;
+                        if (localStorage.getItem(`w${w}-diet-${dIdx}-${m}`) === 'true') overallChecked++;
+                    }
+                });
+            }
+            const overallPercent = overallTotal > 0 ? Math.round((overallChecked / overallTotal) * 100) : 0;
+            document.getElementById('overall-percent').innerText = `${overallPercent}%`;
+            document.getElementById('overall-fill').style.width = `${overallPercent}%`;
+        }
+
+        function resetCurrentWeek() {
+            if (confirm(`Are you sure you want to reset all checkboxes for Week ${currentWeek}?`)) {
+                days.forEach((_, dIdx) => {
+                    const exCount = workoutData.schedules[days[dIdx]].exercises.length;
+                    for (let e = 0; e < exCount; e++) {
+                        localStorage.removeItem(`w${currentWeek}-d${dIdx}-ex${e}`);
+                    }
+                    const mealCount = dietData[days[dIdx]].length;
+                    for (let m = 0; m < mealCount; m++) {
+                        localStorage.removeItem(`w${currentWeek}-diet-${dIdx}-${m}`);
+                    }
+                });
+                renderContent();
+                updateProgressBars();
+            }
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 1500);
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
